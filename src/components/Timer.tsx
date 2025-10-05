@@ -143,13 +143,13 @@ const Timer = () => {
 
   return (
     <div
-      className={`flex justify-center rounded-xl p-4 bg-gradient-to-br w-[740px] mx-auto ${
+      className={`flex justify-center rounded-xl p-4 bg-gradient-to-br max-w-[740px] w-full mx-auto ${
         mode === "work"
           ? "from-amber-500 to-red-500"
           : "from-yellow-500 to-green-500"
       }`}
     >
-      <div className="bg-background space-y-12 rounded-xl w-full min-h-96 p-8">
+      <div className="bg-background space-y-12 rounded-xl w-full lg:min-h-96 h-fit p-8">
         {/* モード切り替えボタン */}
         <div className="flex gap-2 justify-center">
           <ModeTypeButton
@@ -164,7 +164,7 @@ const Timer = () => {
           />
         </div>
 
-        <p className="text-center font-bold text-9xl font-mono">
+        <p className="text-center font-bold md:text-9xl sm:text-8xl text-7xl font-mono">
           {displayMinutes}:{displaySeconds}
         </p>
 
