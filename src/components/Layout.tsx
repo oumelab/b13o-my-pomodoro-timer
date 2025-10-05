@@ -9,18 +9,8 @@ type LayoutProps = {
 const Layout = (props: LayoutProps) => {
   return (
     <main className="min-h-screen px-5 space-y-12">
-      <header className="max-w-screen-lg mx-auto py-4 flex justify-between items-center">
-        <h1 className="text-lg font-bold">My Pomodoro Timer</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <a href="#" target="_bank">
-              <GithubMark className="fill-foreground size-5" />
-              <span className="sr-only">GitHub</span>
-            </a>
-          </Button>
-          <ModeToggle />
-        </div>
-      </header>
+      {/* Header */}
+      <Header />
       {/* Hero Section */}
       <div className="lg:text-center space-y-8">
         {/* <h1 className="text-5xl font-bold">My Pomodoro Timer</h1> */}
@@ -35,21 +25,44 @@ const Layout = (props: LayoutProps) => {
       {props.children}
 
       {/* Footer */}
-      <footer className="sticky bottom-0 top-full text-center pb-8">
+      <Footer />
+    </main>
+  );
+};
+
+const Header = () => {
+  return (
+    <header className="max-w-screen-lg mx-auto py-4 flex justify-between items-center">
+    <h1 className="text-lg font-bold">My Pomodoro Timer</h1>
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="icon" asChild>
+        <a href="https://github.com/oumelab/b13o-my-pomodoro-timer" target="_blank" rel="noreferrer">
+          <GithubMark className="fill-foreground size-5" />
+          <span className="sr-only">GitHub</span>
+        </a>
+      </Button>
+      <ModeToggle />
+    </div>
+  </header>
+  );
+};
+
+const Footer = () => {
+  return (
+    <footer className="sticky bottom-0 top-full text-center pb-8">
         <p className="text-muted-foreground">
           Created by{" "}
           <a
             className="text-muted-foreground hover:text-primary underline underline-offset-4"
-            href="#" // TODO: Replace with your actual URL
+            href="https://github.com/oumelab/b13o-my-pomodoro-timer"
             target="_blank"
             rel="noreferrer"
           >
-            @your-handle
+            @oumelab
           </a>{" "}
           &copy; 2025
         </p>
       </footer>
-    </main>
   );
 };
 
