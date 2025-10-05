@@ -12,7 +12,7 @@ export const ModeTypeButton = (props: ModeTypeButtonProps) => {
     <Button
       variant="ghost"
       onClick={props.onClick}
-      className={`bg-transparent border border-muted-foreground text-3xl h-16 w-16 rounded-full flex justify-center items-center ${
+      className={`bg-transparent text-3xl h-16 w-16 rounded-full flex justify-center items-center ${
         props.currentMode === props.modeType ? "border border-foreground" : ""
       }`}
     >
