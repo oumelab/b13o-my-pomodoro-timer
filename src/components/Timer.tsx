@@ -1,8 +1,8 @@
 import {Pause, Play, RefreshCcw} from "lucide-react";
-import {useRef, useState} from "react";
+import {useEffect, useEffectEvent, useRef, useState} from "react";
 import {ControlButton} from "./ControlButton";
 import {ModeTypeButton} from "./ModeTypeButton";
-import { TIMER_OPTIONS } from "@/constants";
+import {TIMER_OPTIONS} from "@/constants";
 
 const Timer = () => {
   // 作業/休憩モード
@@ -18,15 +18,70 @@ const Timer = () => {
     null
   );
 
+  // インターバル処理の参照
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  // AudioContext オブジェクトは、UI のレンダーには関係ない値なので、ref で管理する
+  const audioRef = useRef<AudioContext | null>(null);
 
-  function handleChangeMode() {
+  // ブラウザ API など、React コンポーネントを外部の API と接続する必要がある場合は、useEffect を使用する
+  useEffect(() => {
+    audioRef.current = window.AudioContext ? new window.AudioContext() : null;
+    return () => {
+      if (audioRef.current) {
+        // AudioContext を破棄(開放)する,クリーンアップ処理
+        audioRef.current.close();
+      }
+    };
+  }, []);
+
+  // ビープ音を再生する関数
+  const playBeep = (frequency: number, duration: number) => {
+    if (!audioRef.current) return;
+    const oscillator = audioRef.current.createOscillator(); // 音波を作る
+    const gainNode = audioRef.current.createGain(); // 音量を調整する
+
+    oscillator.connect(gainNode); // 音波を音量調整に接続
+    gainNode.connect(audioRef.current.destination); // 音量調整を音声出力に接続
+
+    gainNode.gain.value = 0.5; // 音量を調整
+    oscillator.frequency.value = frequency; // 音の高さを調整
+    oscillator.start(); // 音を再生
+
+    setTimeout(() => {
+      oscillator.stop(); // 音を停止
+    }, duration);
+  };
+
+  const playChime = useEffectEvent(() => {
+    playBeep(523.25, 200); // C5: ド
+    setTimeout(() => playBeep(659.25, 200), 200); // E5: ミ
+    setTimeout(() => playBeep(783.99, 400), 400); // G5: ソ
+  });
+
+  // タイマー完了時の処理(チャイムを再生し、モードを切り替え、タイマーを再開)
+  useEffect(() => {
+    if (startTime && now) {
+      const timePassed = now - startTime; // 経過時間
+      const totalTime = TIMER_OPTIONS[mode].minutes * 60 * 1000; // 設定時間
+
+      if (timePassed >= totalTime) {
+        playChime(); // チャイムを再生
+        handleChangeMode(); // モードを切り替え
+        handleStart(); // タイマーを再開
+      }
+    }
+  }, [now, startTime, mode]);
+
+  const handleChangeMode = useEffectEvent(() => {
     handleReset();
     setMode(mode === "work" ? "break" : "work");
-  }
+  });
 
-  function handleStart() {
-    // 後にAudio の設定を追加
+  const handleStart = useEffectEvent(() => {
+    if (audioRef.current) {
+      // ユーザーの操作によって音が鳴るようにしないといけない。
+      audioRef.current.resume();
+    }
 
     const currentTime = Date.now();
     // 停止中かつ、１時停止状態の場合
@@ -43,7 +98,7 @@ const Timer = () => {
     }, 1000);
 
     setIsRunning(true);
-  }
+  });
 
   function handleStop() {
     // インターバル処理の停止
