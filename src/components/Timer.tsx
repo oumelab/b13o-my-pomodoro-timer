@@ -52,39 +52,20 @@ const Timer = () => {
     }, duration);
   };
 
-  const playChime = useEffectEvent(() => {
-    playBeep(523.25, 200); // C5: ド
-    setTimeout(() => playBeep(659.25, 200), 200); // E5: ミ
-    setTimeout(() => playBeep(783.99, 400), 400); // G5: ソ
-  });
+  function handleReset() {
+    clearInterval(intervalRef.current);
+    setStartTime(null);
+    setNow(null);
+    setIsRunning(false);
+    setPausedTimeRemaining(null);
+  }
 
-  // タイマー完了時の処理(チャイムを再生し、モードを切り替え、タイマーを再開)
-  useEffect(() => {
-    if (startTime && now) {
-      const timePassed = now - startTime; // 経過時間
-      const totalTime = TIMER_OPTIONS[mode].minutes * 60 * 1000; // 設定時間
-
-      if (timePassed >= totalTime) {
-        playChime(); // チャイムを再生
-        handleChangeMode(); // モードを切り替え
-        handleStart(); // タイマーを再開
-      }
-    }
-  }, [now, startTime, mode]);
-
-  const handleChangeMode = useEffectEvent(() => {
-    handleReset();
-    setMode(mode === "work" ? "break" : "work");
-  });
-
-  const handleStart = useEffectEvent(() => {
+  function handleStart() {
     if (audioRef.current) {
-      // ユーザーの操作によって音が鳴るようにしないといけない。
       audioRef.current.resume();
     }
 
     const currentTime = Date.now();
-    // 停止中かつ、１時停止状態の場合
     if (!isRunning && pausedTimeRemaining) {
       setStartTime(currentTime - pausedTimeRemaining);
       setPausedTimeRemaining(null);
@@ -98,36 +79,67 @@ const Timer = () => {
     }, 1000);
 
     setIsRunning(true);
-  });
+  }
 
   function handleStop() {
-    // インターバル処理の停止
     clearInterval(intervalRef.current);
-    // 作業中のフラグをfalse
     setIsRunning(false);
 
-    // 停止された時点の経過時間を、pausedTimeRemainingに格納
     if (startTime != null && now != null) {
       setPausedTimeRemaining(now - startTime);
     }
   }
 
-  function handleReset() {
-    clearInterval(intervalRef.current);
-    setStartTime(null);
-    setNow(null);
-    setIsRunning(false);
-    setPausedTimeRemaining(null);
+  function handleChangeMode() {
+    handleReset();
+    setMode(mode === "work" ? "break" : "work");
   }
+
+  // useEffectEventでラップされた関数を定義
+  const playChime = useEffectEvent(() => {
+    playBeep(523.25, 200);
+    setTimeout(() => playBeep(659.25, 200), 200);
+    setTimeout(() => playBeep(783.99, 400), 400);
+  });
+
+  // タイマーが終了した時の処理
+  const onTimerComplete = useEffectEvent(() => {
+    playChime();
+    handleReset();
+    // handleReset()の後、pausedTimeRemainingはnullになる
+    setMode(mode === "work" ? "break" : "work");
+    handleStart(); // handleReset後はpausedTimeRemainingがnullなので新規スタート
+  });
+
+  // タイマーが終了した時の処理（useEffect）
+  useEffect(() => {
+    if (startTime && now) {
+      const timePassed = now - startTime;
+      const totalTime = TIMER_OPTIONS[mode].minutes * 60 * 1000;
+
+      if (timePassed >= totalTime) {
+        onTimerComplete(); // Effect Eventを呼び出す
+      }
+    }
+  }, [now, startTime, mode]);
+
+  // インターバルのクリーンアップ（コンポーネントアンマウント時のみ）
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []); // 空の依存配列 = アンマウント時のみ実行
 
   // 経過時間(秒)
   const secondsPassed =
     startTime != null && now != null ? Math.floor((now - startTime) / 1000) : 0;
   // 残り時間の秒数（設定時間ー経過時間）
   const calculateTime = TIMER_OPTIONS[mode].minutes * 60 - secondsPassed;
-  const displayMinutes = Math.floor(calculateTime / 60);
-  const displaySeconds =
-    calculateTime % 60 < 10 ? "0" + (calculateTime % 60) : calculateTime % 60;
+  // 分と秒を2桁にパディング
+  const displayMinutes = Math.floor(calculateTime / 60).toString().padStart(2, '0');
+  const displaySeconds = (calculateTime % 60).toString().padStart(2, '0');
 
   return (
     <div
