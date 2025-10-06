@@ -8,7 +8,7 @@ type LayoutProps = {
 
 const Layout = (props: LayoutProps) => {
   return (
-    <main className="min-h-screen px-5 space-y-12">
+    <main className="min-h-dvh px-5 space-y-12">
       {/* Header */}
       <Header />
       {/* Hero Section */}
